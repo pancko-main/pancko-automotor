@@ -1,6 +1,15 @@
-# Pancko Automotor
+# Pancko Automotor v1.1.0
 
 Microapp PWA local para cotizar colores de la línea automotor.
+
+## Cambios de esta versión
+
+- Nueva pantalla de inicio limpia con tres accesos: Cotizar color, Historial y Ajustes.
+- Cotizador más compacto y ordenado para celular.
+- Cada básico y su importe aparecen en una sola línea.
+- Se eliminó el botón Calcular: el resultado se actualiza en vivo mientras se cargan los datos.
+- Se mantiene el historial local existente de la versión anterior.
+- Nuevo caché PWA `v1.1.0` para distribuir la actualización.
 
 ## Qué hace
 
@@ -12,50 +21,16 @@ Microapp PWA local para cotizar colores de la línea automotor.
 - Permite abrir, editar, duplicar y eliminar cálculos.
 - Exporta e importa un respaldo JSON.
 - Funciona offline después de la primera carga.
-- Puede instalarse en Android, Windows y otros sistemas compatibles con PWA.
+- Puede instalarse como PWA.
 
-## Fórmulas usadas
+## Publicar la actualización
 
-```text
-Parte fórmula Pablo = Total fórmula - Material propio
+Reemplazá en el repositorio los archivos de la versión anterior por todos los archivos de esta carpeta, conservando la carpeta `icons`.
 
-Pago a Pablo =
-Parte fórmula Pablo × (1 - descuento) × porcentaje Pablo
+GitHub Pages puede tardar uno o dos minutos en publicar. Como la app usa caché offline, en un dispositivo que ya tenía la versión anterior puede ser necesario:
 
-Valor base material propio =
-Material propio × (1 - descuento) × porcentaje Pablo
+1. Abrir la app con internet.
+2. Cerrarla completamente.
+3. Volver a abrirla.
 
-Cobro parte Pablo =
-Pago a Pablo × (1 + ganancia parte Pablo)
-
-Cobro parte propia =
-Valor base material propio × (1 + ganancia material propio)
-
-Total a cobrar =
-Cobro parte Pablo + Cobro parte propia
-```
-
-## Publicar en GitHub Pages
-
-1. Creá un repositorio nuevo en GitHub.
-2. Subí todos los archivos de esta carpeta conservando la estructura.
-3. En el repositorio abrí **Settings → Pages**.
-4. En **Build and deployment**, elegí **Deploy from a branch**.
-5. Seleccioná la rama `main` y la carpeta `/ (root)`.
-6. Guardá. GitHub mostrará la dirección pública de la app.
-
-Los enlaces internos son relativos, por lo que funciona aunque el repositorio no esté en la raíz del dominio.
-
-## Actualizaciones
-
-Cuando cambies archivos y publiques una versión nueva, modificá `CACHE_NAME` en `sw.js`, por ejemplo:
-
-```js
-const CACHE_NAME = "pancko-automotor-v1.0.1";
-```
-
-Esto obliga al service worker a renovar el caché offline.
-
-## Datos locales
-
-El historial queda guardado en el navegador/dispositivo. Borrar los datos del sitio elimina el historial, por eso conviene exportar respaldos periódicamente.
+El historial no se borra porque la base local conserva el mismo nombre y estructura.

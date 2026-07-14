@@ -14,42 +14,83 @@
 <body>
   <div class="app-shell">
     <header class="topbar">
-      <div>
+      <div class="topbar-copy">
         <h1>Pancko Automotor</h1>
         <p>COTIZADOR DE COLORES · LOCAL · OFFLINE</p>
       </div>
       <div class="brand-badge" aria-label="Pancko">
-        <span class="brand-mark">P</span>
+        <img src="./icons/icon-192.png" alt="" width="58" height="58">
         <strong>PANCKO</strong>
       </div>
     </header>
 
     <main class="main-content">
-      <section id="view-cotizar" class="view is-active" aria-labelledby="title-cotizar">
-        <div class="view-heading">
-          <div>
-            <span class="eyebrow">Cálculo nuevo</span>
-            <h2 id="title-cotizar">Cotizador automotor</h2>
+      <section id="view-home" class="view is-active" aria-labelledby="title-home">
+        <div class="home-heading">
+          <span class="eyebrow">Herramienta local</span>
+          <h2 id="title-home">¿Qué hacemos?</h2>
+        </div>
+
+        <div class="home-menu">
+          <button class="home-card blue" data-go="cotizar" type="button">
+            <span class="home-icon">🚘</span>
+            <span class="home-copy">
+              <strong>Cotizar color</strong>
+              <small>Calcular pago a Pablo y precio al cliente</small>
+            </span>
+            <span class="home-arrow">›</span>
+          </button>
+
+          <button class="home-card red" data-go="historial" type="button">
+            <span class="home-icon">📋</span>
+            <span class="home-copy">
+              <strong>Historial</strong>
+              <small id="home-history-count">Cálculos guardados en este dispositivo</small>
+            </span>
+            <span class="home-arrow">›</span>
+          </button>
+
+          <button class="home-card orange" data-go="ajustes" type="button">
+            <span class="home-icon">⚙️</span>
+            <span class="home-copy">
+              <strong>Ajustes</strong>
+              <small>Porcentajes, instalación y respaldos</small>
+            </span>
+            <span class="home-arrow">›</span>
+          </button>
+        </div>
+
+        <p class="home-local-note">🔒 Todo queda guardado localmente en este dispositivo.</p>
+      </section>
+
+      <section id="view-cotizar" class="view" aria-labelledby="title-cotizar">
+        <div class="inner-heading">
+          <button class="back-home" type="button" data-go="home">← Inicio</button>
+          <div class="inner-title-row">
+            <div>
+              <span class="eyebrow">Cálculo en vivo</span>
+              <h2 id="title-cotizar">Cotizar color</h2>
+            </div>
+            <button id="btn-new-top" class="icon-button" type="button" title="Nuevo cálculo" aria-label="Nuevo cálculo">＋</button>
           </div>
-          <button id="btn-new-top" class="icon-button" type="button" title="Nuevo cálculo" aria-label="Nuevo cálculo">＋</button>
         </div>
 
         <div id="editing-banner" class="editing-banner hidden">
           <span>Editando un cálculo guardado</span>
-          <button id="btn-cancel-edit" type="button">Cancelar edición</button>
+          <button id="btn-cancel-edit" type="button">Cancelar</button>
         </div>
 
         <form id="quote-form" novalidate>
-          <article class="panel">
-            <div class="panel-title">
-              <span class="panel-icon">🚘</span>
+          <article class="quote-card">
+            <div class="section-heading">
+              <span class="section-icon">🚘</span>
               <div>
                 <h3>Datos del color</h3>
-                <p>Las referencias son opcionales.</p>
+                <p>Cliente y referencia son opcionales.</p>
               </div>
             </div>
 
-            <div class="field-grid two-cols">
+            <div class="field-grid identity-grid">
               <label class="field">
                 <span>Cliente</span>
                 <input id="client" type="text" autocomplete="off" placeholder="Ej: Taller Gómez">
@@ -69,18 +110,23 @@
             </label>
           </article>
 
-          <article class="panel">
-            <div class="panel-title with-action">
-              <div class="panel-title-left">
-                <span class="panel-icon">🧪</span>
+          <article class="quote-card compact-card">
+            <div class="section-heading with-action">
+              <div class="section-heading-left">
+                <span class="section-icon">🧪</span>
                 <div>
                   <h3>Material puesto por nosotros</h3>
-                  <p>Agregá tantos importes como necesites.</p>
+                  <p>Opcional. Cada básico ocupa una sola línea.</p>
                 </div>
               </div>
               <button id="btn-add-contribution" class="small-button" type="button">＋ Agregar</button>
             </div>
 
+            <div class="contribution-labels" aria-hidden="true">
+              <span>Básico / nota</span>
+              <span>Importe</span>
+              <span></span>
+            </div>
             <div id="contributions-list" class="contributions-list"></div>
 
             <div class="subtotal-row">
@@ -89,42 +135,42 @@
             </div>
           </article>
 
-          <article class="panel">
-            <div class="panel-title">
-              <span class="panel-icon">⚙️</span>
+          <article class="quote-card compact-card">
+            <div class="section-heading">
+              <span class="section-icon">⚙️</span>
               <div>
-                <h3>Parámetros de la operación</h3>
-                <p>Podés modificarlos solamente para este cálculo.</p>
+                <h3>Parámetros</h3>
+                <p>Los cambios afectan solamente este cálculo.</p>
               </div>
             </div>
 
-            <div class="field-grid two-cols">
-              <label class="field percent-field">
-                <span>Descuento por cantidad</span>
+            <div class="parameter-grid">
+              <label class="mini-field">
+                <span>Desc. cantidad</span>
                 <div class="suffix-input">
                   <input id="discount-pct" type="number" min="0" max="100" step="0.01" inputmode="decimal">
                   <span>%</span>
                 </div>
               </label>
 
-              <label class="field percent-field">
-                <span>Porcentaje para Pablo</span>
+              <label class="mini-field">
+                <span>Para Pablo</span>
                 <div class="suffix-input">
                   <input id="pablo-pct" type="number" min="0" max="100" step="0.01" inputmode="decimal">
                   <span>%</span>
                 </div>
               </label>
 
-              <label class="field percent-field">
-                <span>Ganancia sobre la parte de Pablo</span>
+              <label class="mini-field">
+                <span>Ganancia s/Pablo</span>
                 <div class="suffix-input">
                   <input id="margin-pablo-pct" type="number" min="-100" max="1000" step="0.01" inputmode="decimal">
                   <span>%</span>
                 </div>
               </label>
 
-              <label class="field percent-field">
-                <span>Ganancia sobre lo puesto por nosotros</span>
+              <label class="mini-field">
+                <span>Ganancia s/nuestro</span>
                 <div class="suffix-input">
                   <input id="margin-own-pct" type="number" min="-100" max="1000" step="0.01" inputmode="decimal">
                   <span>%</span>
@@ -134,26 +180,24 @@
           </article>
 
           <div id="form-error" class="message error hidden" role="alert"></div>
-
-          <button id="btn-calculate" class="primary-action" type="submit">
-            <span>🧮</span>
-            CALCULAR
-          </button>
         </form>
 
-        <article id="result-card" class="result-card hidden" aria-live="polite">
+        <article id="result-card" class="result-card" aria-live="polite">
           <div class="result-top">
-            <span>Resultado de la operación</span>
+            <div>
+              <span class="live-dot"></span>
+              Resultado en vivo
+            </div>
             <button id="btn-toggle-details" class="text-button" type="button">Ver detalle</button>
           </div>
 
           <div class="result-main-grid">
             <div class="result-block pablo">
-              <span>A PAGAR A PABLO</span>
+              <span>PAGAR A PABLO</span>
               <strong id="result-pay-pablo">$ 0,00</strong>
             </div>
             <div class="result-block client">
-              <span>A COBRAR AL CLIENTE</span>
+              <span>COBRAR AL CLIENTE</span>
               <strong id="result-charge-client">$ 0,00</strong>
             </div>
           </div>
@@ -168,19 +212,22 @@
           </div>
 
           <div class="result-actions">
-            <button id="btn-save" class="secondary-action save" type="button">💾 Guardar cálculo</button>
+            <button id="btn-save" class="secondary-action save" type="button" disabled>💾 Guardar cálculo</button>
             <button id="btn-new" class="secondary-action" type="button">＋ Nuevo</button>
           </div>
         </article>
       </section>
 
       <section id="view-historial" class="view" aria-labelledby="title-history">
-        <div class="view-heading">
-          <div>
-            <span class="eyebrow">Memoria local</span>
-            <h2 id="title-history">Historial</h2>
+        <div class="inner-heading">
+          <button class="back-home" type="button" data-go="home">← Inicio</button>
+          <div class="inner-title-row">
+            <div>
+              <span class="eyebrow">Memoria local</span>
+              <h2 id="title-history">Historial</h2>
+            </div>
+            <span id="history-count" class="count-pill">0</span>
           </div>
-          <span id="history-count" class="count-pill">0</span>
         </div>
 
         <label class="search-box">
@@ -198,45 +245,48 @@
       </section>
 
       <section id="view-ajustes" class="view" aria-labelledby="title-settings">
-        <div class="view-heading">
-          <div>
-            <span class="eyebrow">Configuración local</span>
-            <h2 id="title-settings">Ajustes</h2>
+        <div class="inner-heading">
+          <button class="back-home" type="button" data-go="home">← Inicio</button>
+          <div class="inner-title-row">
+            <div>
+              <span class="eyebrow">Configuración local</span>
+              <h2 id="title-settings">Ajustes</h2>
+            </div>
           </div>
         </div>
 
         <article class="settings-card orange">
-          <div class="panel-title">
-            <span class="panel-icon">🎚️</span>
+          <div class="section-heading">
+            <span class="section-icon">🎚️</span>
             <div>
               <h3>Valores predeterminados</h3>
               <p>Se cargarán automáticamente en cada cálculo nuevo.</p>
             </div>
           </div>
 
-          <div class="field-grid two-cols">
-            <label class="field percent-field">
+          <div class="parameter-grid settings-parameters">
+            <label class="mini-field">
               <span>Descuento habitual</span>
               <div class="suffix-input">
                 <input id="settings-discount" type="number" min="0" max="100" step="0.01">
                 <span>%</span>
               </div>
             </label>
-            <label class="field percent-field">
-              <span>Porcentaje para Pablo</span>
+            <label class="mini-field">
+              <span>Para Pablo</span>
               <div class="suffix-input">
                 <input id="settings-pablo" type="number" min="0" max="100" step="0.01">
                 <span>%</span>
               </div>
             </label>
-            <label class="field percent-field">
+            <label class="mini-field">
               <span>Ganancia parte Pablo</span>
               <div class="suffix-input">
                 <input id="settings-margin-pablo" type="number" min="-100" max="1000" step="0.01">
                 <span>%</span>
               </div>
             </label>
-            <label class="field percent-field">
+            <label class="mini-field">
               <span>Ganancia material propio</span>
               <div class="suffix-input">
                 <input id="settings-margin-own" type="number" min="-100" max="1000" step="0.01">
@@ -249,8 +299,8 @@
         </article>
 
         <article class="settings-card purple">
-          <div class="panel-title">
-            <span class="panel-icon">📦</span>
+          <div class="section-heading">
+            <span class="section-icon">📦</span>
             <div>
               <h3>Respaldo de datos</h3>
               <p>Exportá el historial e importalo en otro dispositivo.</p>
@@ -265,8 +315,8 @@
         </article>
 
         <article class="settings-card green">
-          <div class="panel-title">
-            <span class="panel-icon">📲</span>
+          <div class="section-heading">
+            <span class="section-icon">📲</span>
             <div>
               <h3>Instalación</h3>
               <p>Podés agregarla a la pantalla principal y usarla como una app.</p>
@@ -277,8 +327,8 @@
         </article>
 
         <article class="settings-card danger">
-          <div class="panel-title">
-            <span class="panel-icon">🗑️</span>
+          <div class="section-heading">
+            <span class="section-icon">🗑️</span>
             <div>
               <h3>Zona de cuidado</h3>
               <p>Esta acción elimina únicamente el historial local.</p>
@@ -290,21 +340,6 @@
         <p class="local-note">🔒 Todos los datos quedan guardados solamente en este dispositivo.</p>
       </section>
     </main>
-
-    <nav class="bottom-nav" aria-label="Navegación principal">
-      <button class="nav-item is-active" data-view="cotizar" type="button">
-        <span>🧮</span>
-        <small>Cotizar</small>
-      </button>
-      <button class="nav-item" data-view="historial" type="button">
-        <span>📋</span>
-        <small>Historial</small>
-      </button>
-      <button class="nav-item" data-view="ajustes" type="button">
-        <span>⚙️</span>
-        <small>Ajustes</small>
-      </button>
-    </nav>
 
     <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
   </div>

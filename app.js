@@ -35,7 +35,6 @@
     marginPabloPct: $("#margin-pablo-pct"),
     marginOwnPct: $("#margin-own-pct"),
     formError: $("#form-error"),
-    resultCard: $("#result-card"),
     resultPayPablo: $("#result-pay-pablo"),
     resultChargeClient: $("#result-charge-client"),
     resultDetails: $("#result-details"),
@@ -52,6 +51,7 @@
     historyList: $("#history-list"),
     historyEmpty: $("#history-empty"),
     historyCount: $("#history-count"),
+    homeHistoryCount: $("#home-history-count"),
     settingsDiscount: $("#settings-discount"),
     settingsPablo: $("#settings-pablo"),
     settingsMarginPablo: $("#settings-margin-pablo"),
@@ -70,7 +70,7 @@
       applySettingsToForm();
       applySettingsToSettingsView();
       addContributionRow();
-      updateOwnTotal();
+      updateCalculation();
       await renderHistory();
       registerServiceWorker();
       updateInstallButton();
@@ -81,20 +81,27 @@
   }
 
   function bindEvents() {
-    $$(".nav-item").forEach(button => {
-      button.addEventListener("click", () => switchView(button.dataset.view));
+    $$('[data-go]').forEach(button => {
+      button.addEventListener("click", () => switchView(button.dataset.go));
     });
 
-    $("#btn-add-contribution").addEventListener("click", () => addContributionRow());
-    $("#btn-new").addEventListener("click", resetForm);
-    $("#btn-new-top").addEventListener("click", resetForm);
-    $("#btn-cancel-edit").addEventListener("click", resetForm);
-    els.form.addEventListener("submit", handleCalculate);
+    $("#btn-add-contribution").addEventListener("click", () => {
+      addContributionRow();
+      updateCalculation();
+      const rows = $$(".contribution-row", els.contributionsList);
+      rows.at(-1)?.querySelector(".contribution-label")?.focus();
+    });
+
+    $("#btn-new").addEventListener("click", () => resetForm());
+    $("#btn-new-top").addEventListener("click", () => resetForm());
+    $("#btn-cancel-edit").addEventListener("click", () => resetForm());
     els.btnSave.addEventListener("click", saveCurrentQuote);
     els.btnToggleDetails.addEventListener("click", toggleResultDetails);
 
-    els.contributionsList.addEventListener("input", event => {
+    els.form.addEventListener("submit", event => event.preventDefault());
+    els.form.addEventListener("input", event => {
       if (event.target.classList.contains("currency-input")) updateOwnTotal();
+      updateCalculation();
     });
 
     els.contributionsList.addEventListener("click", event => {
@@ -102,12 +109,13 @@
       if (!button) return;
       button.closest(".contribution-row").remove();
       if (!els.contributionsList.children.length) addContributionRow();
-      updateOwnTotal();
+      updateCalculation();
     });
 
     document.addEventListener("blur", event => {
       if (event.target.classList?.contains("currency-input")) {
         formatCurrencyInput(event.target);
+        updateCalculation();
       }
     }, true);
 
@@ -147,10 +155,9 @@
 
   function switchView(viewName) {
     $$(".view").forEach(view => view.classList.remove("is-active"));
-    $$(".nav-item").forEach(button => button.classList.remove("is-active"));
-
-    $(`#view-${viewName}`).classList.add("is-active");
-    $(`.nav-item[data-view="${viewName}"]`).classList.add("is-active");
+    const target = $(`#view-${viewName}`);
+    if (!target) return;
+    target.classList.add("is-active");
 
     if (viewName === "historial") renderHistory();
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -160,8 +167,8 @@
     const row = document.createElement("div");
     row.className = "contribution-row";
     row.innerHTML = `
-      <input class="contribution-label" type="text" autocomplete="off" placeholder="Básico / nota (opcional)" value="${escapeHtml(contribution.label || "")}">
-      <input class="currency-input contribution-amount" type="text" inputmode="decimal" autocomplete="off" placeholder="Importe" value="${contribution.amount ? formatNumberInput(contribution.amount) : ""}">
+      <input class="contribution-label" type="text" autocomplete="off" placeholder="Ej: 337" value="${escapeHtml(contribution.label || "")}">
+      <input class="currency-input contribution-amount" type="text" inputmode="decimal" autocomplete="off" placeholder="$ 0,00" value="${contribution.amount ? formatNumberInput(contribution.amount) : ""}">
       <button class="delete-contribution" type="button" title="Eliminar aporte" aria-label="Eliminar aporte">🗑️</button>
     `;
     els.contributionsList.appendChild(row);
@@ -181,14 +188,22 @@
     els.ownTotalDisplay.textContent = formatCurrency(total);
   }
 
-  function handleCalculate(event) {
-    event.preventDefault();
+  function updateCalculation() {
+    updateOwnTotal();
     clearError();
 
     const input = collectFormInput();
+    if (!(input.formulaTotal > 0)) {
+      state.currentResult = null;
+      renderEmptyResult();
+      return;
+    }
+
     const validation = validateInput(input);
     if (!validation.ok) {
+      state.currentResult = null;
       showError(validation.message);
+      renderEmptyResult();
       return;
     }
 
@@ -215,9 +230,6 @@
     if (!(input.formulaTotal > 0)) {
       return { ok: false, message: "Ingresá el total de la fórmula." };
     }
-    if (ownTotal < 0) {
-      return { ok: false, message: "Los aportes propios no pueden ser negativos." };
-    }
     if (ownTotal > input.formulaTotal + 0.009) {
       return { ok: false, message: "El material puesto por nosotros no puede superar el total de la fórmula." };
     }
@@ -241,7 +253,6 @@
 
     const payPablo = roundMoney(pabloFormulaTotal * quantityFactor * pabloFactor);
     const ownBase = roundMoney(ownFormulaTotal * quantityFactor * pabloFactor);
-
     const pabloSale = roundMoney(payPablo * (1 + input.marginPabloPct / 100));
     const ownSale = roundMoney(ownBase * (1 + input.marginOwnPct / 100));
     const chargeClient = roundMoney(pabloSale + ownSale);
@@ -270,14 +281,21 @@
     els.detailPabloSale.textContent = formatCurrency(result.pabloSale);
     els.detailOwnSale.textContent = formatCurrency(result.ownSale);
     els.detailProfit.textContent = formatCurrency(result.commercialProfit);
+    els.btnSave.disabled = false;
+  }
 
-    els.resultCard.classList.remove("hidden");
-    els.resultDetails.classList.add("hidden");
-    els.btnToggleDetails.textContent = "Ver detalle";
-
-    setTimeout(() => {
-      els.resultCard.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 80);
+  function renderEmptyResult() {
+    [
+      els.resultPayPablo,
+      els.resultChargeClient,
+      els.detailPabloFormula,
+      els.detailOwnFormula,
+      els.detailOwnBase,
+      els.detailPabloSale,
+      els.detailOwnSale,
+      els.detailProfit
+    ].forEach(element => { element.textContent = formatCurrency(0); });
+    els.btnSave.disabled = true;
   }
 
   function toggleResultDetails() {
@@ -286,8 +304,9 @@
   }
 
   async function saveCurrentQuote() {
+    updateCalculation();
     if (!state.currentResult) {
-      showToast("Primero calculá la operación.");
+      showToast("Ingresá una fórmula válida antes de guardar.");
       return;
     }
 
@@ -326,16 +345,12 @@
 
     els.contributionsList.innerHTML = "";
     (quote.contributions?.length ? quote.contributions : [{}]).forEach(addContributionRow);
-    updateOwnTotal();
-
-    const currentInput = collectFormInput();
-    state.currentResult = calculate(currentInput);
-    renderResult(state.currentResult);
 
     state.editingId = duplicate ? null : quote.id;
     els.editingBanner.classList.toggle("hidden", duplicate);
     els.btnSave.textContent = duplicate ? "💾 Guardar copia" : "💾 Actualizar cálculo";
 
+    updateCalculation();
     switchView("cotizar");
     showToast(duplicate ? "Cálculo duplicado. Podés modificarlo." : "Cálculo abierto para editar.");
   }
@@ -358,20 +373,26 @@
     els.contributionsList.innerHTML = "";
     addContributionRow();
     applySettingsToForm();
-    updateOwnTotal();
     clearError();
-    els.resultCard.classList.add("hidden");
     els.editingBanner.classList.add("hidden");
     els.btnSave.textContent = "💾 Guardar cálculo";
     els.resultDetails.classList.add("hidden");
+    els.btnToggleDetails.textContent = "Ver detalle";
+    updateCalculation();
     if (scroll) window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   async function renderHistory() {
     if (!state.db) return;
 
+    const allQuotes = await dbGetAll();
+    const totalCount = allQuotes.length;
+    els.homeHistoryCount.textContent = totalCount
+      ? `${totalCount} cálculo${totalCount === 1 ? "" : "s"} guardado${totalCount === 1 ? "" : "s"}`
+      : "Cálculos guardados en este dispositivo";
+
     const query = els.historySearch.value.trim().toLocaleLowerCase("es-AR");
-    let quotes = await dbGetAll();
+    let quotes = [...allQuotes];
     quotes.sort((a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt));
 
     if (query) {
@@ -461,19 +482,17 @@
       marginOwnPct: numberOrZero(els.settingsMarginOwn.value)
     };
 
-    const validation = validateInput({
-      formulaTotal: 1,
-      contributions: [],
-      ...settings
-    });
-
+    const validation = validateInput({ formulaTotal: 1, contributions: [], ...settings });
     if (!validation.ok) {
       showToast(validation.message);
       return;
     }
 
     saveSettings(settings);
-    if (!state.currentResult && !state.editingId) applySettingsToForm();
+    if (!state.currentResult && !state.editingId) {
+      applySettingsToForm();
+      updateCalculation();
+    }
     showToast("Valores predeterminados guardados.");
   }
 
@@ -543,7 +562,7 @@
 
   function installApp() {
     if (!state.deferredInstallPrompt) {
-      showToast("Usá el menú del navegador y elegí “Agregar a pantalla principal”.");
+      showToast("Usá el menú del navegador y elegí ‘Agregar a pantalla principal’. ");
       return;
     }
 
@@ -576,11 +595,8 @@
     const lastDot = raw.lastIndexOf(".");
 
     if (lastComma !== -1 && lastDot !== -1) {
-      if (lastComma > lastDot) {
-        raw = raw.replace(/\./g, "").replace(",", ".");
-      } else {
-        raw = raw.replace(/,/g, "");
-      }
+      if (lastComma > lastDot) raw = raw.replace(/\./g, "").replace(",", ".");
+      else raw = raw.replace(/,/g, "");
     } else if (lastComma !== -1) {
       raw = raw.replace(/\./g, "").replace(",", ".");
     } else if (lastDot !== -1) {
@@ -618,13 +634,10 @@
   function formatCurrencyInput(input) {
     const value = parseArgNumber(input.value);
     input.value = value ? formatNumberInput(value) : "";
-    if (input.classList.contains("contribution-amount")) updateOwnTotal();
   }
 
   function formatDate(value) {
-    return new Intl.DateTimeFormat("es-AR", {
-      dateStyle: "short"
-    }).format(new Date(value));
+    return new Intl.DateTimeFormat("es-AR", { dateStyle: "short" }).format(new Date(value));
   }
 
   function formatDateTime(value) {
@@ -660,7 +673,6 @@
   function showError(message) {
     els.formError.textContent = message;
     els.formError.classList.remove("hidden");
-    els.formError.scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
   function clearError() {
@@ -713,23 +725,9 @@
     });
   }
 
-  function dbPut(value) {
-    return withStore("readwrite", store => store.put(value));
-  }
-
-  function dbGet(id) {
-    return withStore("readonly", store => store.get(id));
-  }
-
-  function dbGetAll() {
-    return withStore("readonly", store => store.getAll());
-  }
-
-  function dbDelete(id) {
-    return withStore("readwrite", store => store.delete(id));
-  }
-
-  function dbClear() {
-    return withStore("readwrite", store => store.clear());
-  }
+  function dbPut(value) { return withStore("readwrite", store => store.put(value)); }
+  function dbGet(id) { return withStore("readonly", store => store.get(id)); }
+  function dbGetAll() { return withStore("readonly", store => store.getAll()); }
+  function dbDelete(id) { return withStore("readwrite", store => store.delete(id)); }
+  function dbClear() { return withStore("readwrite", store => store.clear()); }
 })();
