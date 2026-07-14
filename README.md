@@ -34,3 +34,15 @@ GitHub Pages puede tardar uno o dos minutos en publicar. Como la app usa caché 
 3. Volver a abrirla.
 
 El historial no se borra porque la base local conserva el mismo nombre y estructura.
+
+
+## Versión 1.2.0
+
+Se agregó un bloque debajo del precio final para facilitar la carga en GEN21:
+
+- Precio calculado sin IVA.
+- Precio de lista sin IVA.
+- Botones para copiar ambos importes.
+- IVA y descuento de lista configurables desde Ajustes.
+
+Para que aplicar un descuento de lista del 30% vuelva exactamente al precio calculado, el precio de lista se obtiene dividiendo por `0,70`; no multiplicando por `1,30`.

@@ -9,7 +9,9 @@
     discountPct: 5,
     pabloPct: 46,
     marginPabloPct: 30,
-    marginOwnPct: 30
+    marginOwnPct: 30,
+    vatPct: 21,
+    listDiscountPct: 30
   };
 
   const $ = (selector, parent = document) => parent.querySelector(selector);
@@ -37,6 +39,10 @@
     formError: $("#form-error"),
     resultPayPablo: $("#result-pay-pablo"),
     resultChargeClient: $("#result-charge-client"),
+    billingNetPrice: $("#billing-net-price"),
+    billingListNetPrice: $("#billing-list-net-price"),
+    billingListCaption: $("#billing-list-caption"),
+    billingNote: $("#billing-note"),
     resultDetails: $("#result-details"),
     btnToggleDetails: $("#btn-toggle-details"),
     detailPabloFormula: $("#detail-pablo-formula"),
@@ -56,6 +62,8 @@
     settingsPablo: $("#settings-pablo"),
     settingsMarginPablo: $("#settings-margin-pablo"),
     settingsMarginOwn: $("#settings-margin-own"),
+    settingsVat: $("#settings-vat"),
+    settingsListDiscount: $("#settings-list-discount"),
     importFile: $("#import-file"),
     btnInstall: $("#btn-install"),
     toast: $("#toast")
@@ -151,6 +159,12 @@
     });
 
     els.btnInstall.addEventListener("click", installApp);
+
+    document.addEventListener("click", event => {
+      const button = event.target.closest(".copy-value");
+      if (!button) return;
+      copyDisplayedValue(button.dataset.copyTarget);
+    });
   }
 
   function switchView(viewName) {
@@ -220,7 +234,9 @@
       discountPct: numberOrZero(els.discountPct.value),
       pabloPct: numberOrZero(els.pabloPct.value),
       marginPabloPct: numberOrZero(els.marginPabloPct.value),
-      marginOwnPct: numberOrZero(els.marginOwnPct.value)
+      marginOwnPct: numberOrZero(els.marginOwnPct.value),
+      vatPct: numberOrZero(state.settings.vatPct),
+      listDiscountPct: numberOrZero(state.settings.listDiscountPct)
     };
   }
 
@@ -242,6 +258,12 @@
     if (input.marginPabloPct < -100 || input.marginOwnPct < -100) {
       return { ok: false, message: "La ganancia no puede ser menor a -100%." };
     }
+    if (input.vatPct < 0 || input.vatPct > 100) {
+      return { ok: false, message: "El IVA debe estar entre 0% y 100%." };
+    }
+    if (input.listDiscountPct < 0 || input.listDiscountPct >= 100) {
+      return { ok: false, message: "El descuento de lista debe ser mayor o igual a 0% y menor a 100%." };
+    }
     return { ok: true };
   }
 
@@ -258,6 +280,12 @@
     const chargeClient = roundMoney(pabloSale + ownSale);
     const commercialProfit = roundMoney((pabloSale - payPablo) + (ownSale - ownBase));
 
+    const vatFactor = 1 + input.vatPct / 100;
+    const listDiscountFactor = 1 - input.listDiscountPct / 100;
+    const billingNetPrice = roundMoney(chargeClient / vatFactor);
+    const billingListGrossPrice = roundMoney(chargeClient / listDiscountFactor);
+    const billingListNetPrice = roundMoney(billingListGrossPrice / vatFactor);
+
     return {
       ...input,
       ownFormulaTotal,
@@ -268,13 +296,20 @@
       pabloSale,
       ownSale,
       chargeClient,
-      commercialProfit
+      commercialProfit,
+      billingNetPrice,
+      billingListGrossPrice,
+      billingListNetPrice
     };
   }
 
   function renderResult(result) {
     els.resultPayPablo.textContent = formatCurrency(result.payPablo);
     els.resultChargeClient.textContent = formatCurrency(result.chargeClient);
+    els.billingNetPrice.textContent = formatCurrency(result.billingNetPrice);
+    els.billingListNetPrice.textContent = formatCurrency(result.billingListNetPrice);
+    els.billingListCaption.textContent = `Para aplicar luego ${formatPercent(result.listDiscountPct)} de descuento.`;
+    els.billingNote.textContent = `Con IVA ${formatPercent(result.vatPct)} y descuento de lista ${formatPercent(result.listDiscountPct)}. Al aplicar ese descuento en la factura, el total vuelve al precio calculado.`;
     els.detailPabloFormula.textContent = formatCurrency(result.pabloFormulaTotal);
     els.detailOwnFormula.textContent = formatCurrency(result.ownFormulaTotal);
     els.detailOwnBase.textContent = formatCurrency(result.ownBase);
@@ -288,6 +323,8 @@
     [
       els.resultPayPablo,
       els.resultChargeClient,
+      els.billingNetPrice,
+      els.billingListNetPrice,
       els.detailPabloFormula,
       els.detailOwnFormula,
       els.detailOwnBase,
@@ -472,6 +509,8 @@
     els.settingsPablo.value = state.settings.pabloPct;
     els.settingsMarginPablo.value = state.settings.marginPabloPct;
     els.settingsMarginOwn.value = state.settings.marginOwnPct;
+    els.settingsVat.value = state.settings.vatPct;
+    els.settingsListDiscount.value = state.settings.listDiscountPct;
   }
 
   function saveSettingsFromView() {
@@ -479,7 +518,9 @@
       discountPct: numberOrZero(els.settingsDiscount.value),
       pabloPct: numberOrZero(els.settingsPablo.value),
       marginPabloPct: numberOrZero(els.settingsMarginPablo.value),
-      marginOwnPct: numberOrZero(els.settingsMarginOwn.value)
+      marginOwnPct: numberOrZero(els.settingsMarginOwn.value),
+      vatPct: numberOrZero(els.settingsVat.value),
+      listDiscountPct: numberOrZero(els.settingsListDiscount.value)
     };
 
     const validation = validateInput({ formulaTotal: 1, contributions: [], ...settings });
@@ -491,8 +532,8 @@
     saveSettings(settings);
     if (!state.currentResult && !state.editingId) {
       applySettingsToForm();
-      updateCalculation();
     }
+    updateCalculation();
     showToast("Valores predeterminados guardados.");
   }
 
@@ -668,6 +709,39 @@
       .replaceAll(">", "&gt;")
       .replaceAll('"', "&quot;")
       .replaceAll("'", "&#039;");
+  }
+
+  function formatPercent(value) {
+    return new Intl.NumberFormat("es-AR", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2
+    }).format(Number(value) || 0) + "%";
+  }
+
+  async function copyDisplayedValue(targetId) {
+    const element = document.getElementById(targetId);
+    if (!element) return;
+
+    const text = element.textContent.trim();
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        textarea.setAttribute("readonly", "");
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        textarea.remove();
+      }
+      showToast(`${text} copiado.`);
+    } catch (error) {
+      console.error(error);
+      showToast("No se pudo copiar el importe.");
+    }
   }
 
   function showError(message) {

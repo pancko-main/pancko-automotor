@@ -1,4 +1,4 @@
-const CACHE_NAME = "pancko-automotor-v1.1.0";
+const CACHE_NAME = "pancko-automotor-v1.2.0";
 const APP_ASSETS = [
   "./",
   "./index.html",

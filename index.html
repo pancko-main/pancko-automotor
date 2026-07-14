@@ -202,6 +202,44 @@
             </div>
           </div>
 
+          <section class="billing-helper" aria-label="Datos para cargar en GEN21">
+            <div class="billing-heading">
+              <div>
+                <span class="billing-kicker">PARA CARGAR EN GEN21</span>
+                <h3>Valores de facturación</h3>
+              </div>
+              <span class="billing-icon">🧾</span>
+            </div>
+
+            <div class="billing-values">
+              <div class="billing-row">
+                <div>
+                  <span>Precio calculado sin IVA</span>
+                  <small>El mismo precio final, neto de IVA.</small>
+                </div>
+                <div class="billing-value-actions">
+                  <strong id="billing-net-price">$ 0,00</strong>
+                  <button class="copy-value" type="button" data-copy-target="billing-net-price" aria-label="Copiar precio sin IVA">Copiar</button>
+                </div>
+              </div>
+
+              <div class="billing-row featured">
+                <div>
+                  <span>Precio de lista sin IVA</span>
+                  <small id="billing-list-caption">Para aplicar luego 30% de descuento.</small>
+                </div>
+                <div class="billing-value-actions">
+                  <strong id="billing-list-net-price">$ 0,00</strong>
+                  <button class="copy-value" type="button" data-copy-target="billing-list-net-price" aria-label="Copiar precio de lista sin IVA">Copiar</button>
+                </div>
+              </div>
+            </div>
+
+            <p id="billing-note" class="billing-note">
+              Con IVA 21% y descuento de lista 30%. Al aplicar ese descuento en la factura, el total vuelve al precio calculado.
+            </p>
+          </section>
+
           <div id="result-details" class="result-details hidden">
             <div><span>Parte de fórmula correspondiente a Pablo</span><strong id="detail-pablo-formula">$ 0,00</strong></div>
             <div><span>Total de material propio</span><strong id="detail-own-formula">$ 0,00</strong></div>
@@ -290,6 +328,20 @@
               <span>Ganancia material propio</span>
               <div class="suffix-input">
                 <input id="settings-margin-own" type="number" min="-100" max="1000" step="0.01">
+                <span>%</span>
+              </div>
+            </label>
+            <label class="mini-field">
+              <span>IVA para facturación</span>
+              <div class="suffix-input">
+                <input id="settings-vat" type="number" min="0" max="100" step="0.01">
+                <span>%</span>
+              </div>
+            </label>
+            <label class="mini-field">
+              <span>Descuento de lista</span>
+              <div class="suffix-input">
+                <input id="settings-list-discount" type="number" min="0" max="99.99" step="0.01">
                 <span>%</span>
               </div>
             </label>
